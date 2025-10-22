@@ -39,4 +39,20 @@ public class Server {
             c.sendMessage(message);
         }
     }
+
+    public boolean sendPrivateMessage(String username, String targetName, String privateMsg) {
+        for(ClientHandler c: clients) {
+            if (c.getUsername().equalsIgnoreCase(targetName)) {
+                c.sendMessage("[ЛС от " + username + "]: " + privateMsg);
+                for (ClientHandler sender : clients) {
+                    if (sender.getUsername().equalsIgnoreCase(username)) {
+                        sender.sendMessage("[ЛС для " + targetName + "]: " + privateMsg);
+                        break;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
 }
