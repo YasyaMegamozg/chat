@@ -7,10 +7,12 @@ public class ChatClient extends JFrame {
     private JTextField inTextField;
     private JButton sendButton;
     private Network network;
+    private String username;
 
-    public ChatClient(String title, Network network) {
+    public ChatClient(String title, Network network, String username) {
         super(title);
         this.network = network;
+        this.username = username;
 
         setLayout(new BorderLayout());
         outTextArea = new JTextArea();
@@ -24,7 +26,6 @@ public class ChatClient extends JFrame {
         bottomPanel.add(sendButton, BorderLayout.EAST);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // Важно! Обновляем GUI через Swing-поток
         network.setCallback(args ->
                 SwingUtilities.invokeLater(() -> outTextArea.append(args[0] + "\n"))
         );
@@ -51,9 +52,18 @@ public class ChatClient extends JFrame {
 
     public static void main(String[] args) {
         try {
+            String username = JOptionPane.showInputDialog(null, "Введите ваше имя:");
+            if (username == null || username.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Имя не может быть пустым!");
+                return;
+            }
+
             Network network = new Network();
             network.connect(8080);
-            new ChatClient("Chat Client", network);
+
+            network.sendMessage(username);
+
+            new ChatClient("Chat Client", network, username);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Не удалось подключиться к серверу!");
         }

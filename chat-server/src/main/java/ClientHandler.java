@@ -7,7 +7,6 @@ public class ClientHandler {
     private DataInputStream in;
     private DataOutputStream out;
     private String username;
-    private static int counter = 1;
 
     public String getUsername() {
         return username;
@@ -18,10 +17,10 @@ public class ClientHandler {
         this.server = server;
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
-        username = "User" + counter++;
+        this.username =in.readUTF();
         server.subscribe(this);
 
-        new Thread(this::listen).start();
+        new Thread(() -> listen()).start();
     }
 
     private void listen() {
