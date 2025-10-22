@@ -24,6 +24,14 @@ public class Server {
         }
     }
 
+    public synchronized Role registerClient(ClientHandler client) {
+        if (!hasAdmin()) {
+            return Role.ADMIN;
+        } else {
+            return Role.USER;
+        }
+    }
+
     public synchronized void subscribe(ClientHandler client) {
         clients.add(client);
         broadcastMessage("[" + client.getUsername() + "] подключился к чату");
@@ -37,6 +45,13 @@ public class Server {
     public synchronized void broadcastMessage(String message) {
         for (ClientHandler c : clients) {
             c.sendMessage(message);
+        }
+        if (!hasAdmin() && !clients.isEmpty()) {
+            ClientHandler promoted = clients.get(0);
+            promoted.setRole(Role.ADMIN);
+            broadcastMessage("[Система] " + promoted.getUsername() + " назначен(а) ADMINOM (по умолчанию)");
+
+            promoted.sendMessage("[Система] Вы теперь ADMIN.");
         }
     }
 
@@ -55,4 +70,34 @@ public class Server {
         }
         return false;
     }
+    public synchronized boolean kickUser(ClientHandler requester, String targetName) {
+        if (requester.getRole() != Role.ADMIN) {
+            requester.sendMessage("[Система] У вас нет прав для выполнения /kick. Только ADMIN может кикать.");
+            return false;
+        }
+
+        for (ClientHandler c : new ArrayList<>(clients)) {
+            if (c.getUsername().equalsIgnoreCase(targetName)) {
+                if (c == requester) {
+                    requester.sendMessage("[Система] Нельзя кикнуть самого себя.");
+                    return false;
+                }
+
+                broadcastMessage("[Система] " + c.getUsername() + " был(а) исключен(а) администратором " + requester.getUsername());
+
+                c.forceDisconnectWithMessage("[Система] Вы были исключены администратором " + requester.getUsername());
+                return true;
+            }
+        }
+
+        requester.sendMessage("[Система] Пользователь '" + targetName + "' не найден.");
+        return false;
+    }
+    private boolean hasAdmin() {
+        for (ClientHandler c : clients) {
+            if (c.getRole() == Role.ADMIN) return true;
+        }
+        return false;
+    }
+
 }
