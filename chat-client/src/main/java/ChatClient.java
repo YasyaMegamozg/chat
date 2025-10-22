@@ -2,18 +2,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 
-public class Main extends JFrame {
+public class ChatClient extends JFrame {
     private JTextArea outTextArea;
     private JTextField inTextField;
     private JButton sendButton;
     private Network network;
 
-    public Main(String title, Network network) {
+    public ChatClient(String title, Network network) {
         super(title);
         this.network = network;
 
         setLayout(new BorderLayout());
-
         outTextArea = new JTextArea();
         outTextArea.setEditable(false);
         add(new JScrollPane(outTextArea), BorderLayout.CENTER);
@@ -25,11 +24,13 @@ public class Main extends JFrame {
         bottomPanel.add(sendButton, BorderLayout.EAST);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // При нажатии Enter или кнопки — отправляем сообщение
+        // Важно! Обновляем GUI через Swing-поток
+        network.setCallback(args ->
+                SwingUtilities.invokeLater(() -> outTextArea.append(args[0] + "\n"))
+        );
+
         sendButton.addActionListener(e -> sendMessage());
         inTextField.addActionListener(e -> sendMessage());
-
-        network.setCallback(args -> outTextArea.append(args[0] + "\n"));
 
         setSize(400, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -52,9 +53,10 @@ public class Main extends JFrame {
         try {
             Network network = new Network();
             network.connect(8080);
-            new Main("Chat Client", network);
+            new ChatClient("Chat Client", network);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Не удалось подключиться к серверу!");
         }
     }
 }
+
