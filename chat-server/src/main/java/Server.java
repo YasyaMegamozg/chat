@@ -10,7 +10,9 @@ public class Server {
 
     public Server(int port) {
         this.port = port;
+        Database.initialize();
     }
+
 
     public void start() {
         System.out.println("Сервер запущен на порту " + port);

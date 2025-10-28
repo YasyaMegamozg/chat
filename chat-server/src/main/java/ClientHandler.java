@@ -8,7 +8,6 @@ public class ClientHandler {
     private DataOutputStream out;
     private String username;
     private Role role;
-    private static int counter = 1;
 
     public String getUsername() {
         return username;
@@ -27,7 +26,17 @@ public class ClientHandler {
         this.server = server;
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
-        this.username =in.readUTF();
+
+        String login = in.readUTF();
+        String password = in.readUTF();
+
+        if (!Database.authenticate(login, password)) {
+            sendMessage("[Сервер] Неверный логин или пароль. Подключение закрыто.");
+            socket.close();
+            throw new IOException("Аутентификация не удалась для пользователя: " + login);
+        }
+
+        this.username =login;
         this.role = server.registerClient(this);
         server.subscribe(this);
 
@@ -66,6 +75,7 @@ public class ClientHandler {
                     String targetName = parts[1];
                     boolean ok = server.kickUser(this, targetName);
                     if (!ok) {
+                        sendMessage("[Система] Не удалось кикнуть пользователя.");
                     }
                     continue;
                 }

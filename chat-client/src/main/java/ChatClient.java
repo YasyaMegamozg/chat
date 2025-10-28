@@ -51,19 +51,30 @@ public class ChatClient extends JFrame {
     }
 
     public static void main(String[] args) {
-        try {
-            String username = JOptionPane.showInputDialog(null, "Введите ваше имя:");
-            if (username == null || username.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Имя не может быть пустым!");
-                return;
-            }
+        JTextField loginField = new JTextField();
+        JPasswordField passwordField = new JPasswordField();
+        Object[] fields = {
+                "Логин:", loginField,
+                "Пароль:", passwordField
+        };
+        int option = JOptionPane.showConfirmDialog(null, fields, "Вход в чат", JOptionPane.OK_CANCEL_OPTION);
+        if (option != JOptionPane.OK_OPTION) return;
 
+        String login = loginField.getText().trim();
+        String password = new String(passwordField.getPassword());
+        if (login.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Поля не могут быть пустыми!");
+            return;
+        }
+
+        try {
             Network network = new Network();
             network.connect(8080);
 
-            network.sendMessage(username);
+            network.sendMessage(login);
+            network.sendMessage(password);
 
-            new ChatClient("Chat Client", network, username);
+            new ChatClient("Chat Client", network, login);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Не удалось подключиться к серверу!");
         }
